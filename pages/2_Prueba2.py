@@ -9,33 +9,52 @@ import streamlit as st
 @st.cache_data() 
 def get_data():
 # Cargar el archivo SHP en un objeto GeoDataFrame
-    shp_path = "Cuenca_Valdivia.shp"
+    shp_path = "USO_suelo_Valdivia2006.shp"
     gdf = gpd.read_file(shp_path)
     # Cargar el segundo archivo SHP en otro objeto GeoDataFrame
     shp2_path = "USO_suelo_LosLagos2006.shp"
     gdf2 = gpd.read_file(shp2_path)
-    return gdf, gdf2
+    # Cargar el tercer archivo SHP en otro objeto GeoDataFrame
+    shp3_path = "USO_suelo_Mafil_2006.shp"
+    gdf3 = gpd.read_file(shp3_path)
+    # Cargar el cuarto archivo SHP en otro objeto GeoDataFrame
+    shp4_path = "USO_suelo_Panguipulli2006.shp"
+    gdf4 = gpd.read_file(shp4_path)
+    return gdf, gdf2, gdf3, gdf4
 
 # Crear un objeto Folium Map centrado en los datos de los polígonos
-m = folium.Map(location=[-39.81, -73.2467], zoom_start=10)
+m = folium.Map(location=[-39.8, -72.8], zoom_start=9)
 
 # Agregar los datos de los polígonos al mapa
 # Obtener los datos de los polígonos y agregarlos al mapa
-gdf, gdf2 = get_data()
+gdf, gdf2, gdf3, gdf4 = get_data()
 folium.GeoJson(gdf,
                name='Polígonos',
-               tooltip=folium.GeoJsonTooltip(fields=['NOM_SSUBC', 'COD_SSUBC'], aliases=['Nombre subsub cuenca','Código subsub cuenca']),
+               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna', 'Uso de suelo al 2006']),
                overlay=True
-              ).add_to(m)
+               ).add_to(m)
 
 # Agregar los datos de los polígonos del segundo archivo SHP al mapa
 folium.GeoJson(gdf2,
                name='Capa_2',
                tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna', 'Uso de suelo al 2006']),
                overlay=True
-              ).add_to(m)
-#HASTA ESTE PUNTO SE PUEDEN VISUALIZAR BIEN LAS CAPAS, PERO HACE FALTA AGREGAR EL SELECCTOR DE CAPAS A LA VISUALIZACIÓN EN MAPA.
+               ).add_to(m)
 
+#Agrega los datos de la tercera capa SHP al mapa
+folium.GeoJson(gdf3,
+               name='Capa_3',
+               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna','Uso de suelo al 2006']),
+               overlay=True
+               ).add_to(m)
+
+#Agrega los datos de la cuarta capa SHP al mapa
+folium.GeoJson(gdf4,
+               name='Capa_4',
+               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna','Uso de suelo al 2006']),
+               overlay=True
+               ).add_to(m)
+#HASTA ESTE PUNTO SE PUEDEN VISUALIZAR BIEN LAS CAPAS, PERO HACE FALTA AGREGAR EL SELECCTOR DE CAPAS A LA VISUALIZACIÓN EN MAPA.
 
 
 # Mostrar el mapa en Streamlit
