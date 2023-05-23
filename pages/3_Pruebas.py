@@ -1,75 +1,41 @@
 import geopandas as gpd
+import streamlit as st
+import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import folium_static
-import streamlit as st
+import numpy as np
 
+st.title("Ejemplo de trabajo con Python")
+st.write("Durante el año 2022, se me encargó realizar el trabajo cartográfico asociado al territorio de acción de la Asociación de Municipalidades Paisajes de Conservación por la Biodiversidad de la Región de Los Ríos, asociación compuesta por las comunas de Panguipulli, Los Lagos, Máfil y Valdivia. Dentro del trabajo realizado y de mi labor como geógrafo, debí desarrolla diversas cartografías del territorio de acción de la asociación.")
+st.write("A continuación, podrán observar el Uso del Suelo al año 2006 en lo que actualmente sería el territorio de acción de esta asociación de municipios, este mapa fue desarrollado con la base de datos que posee CONAF para la Región de Los Ríos y para el caso de esta página web, se desarrolló con Python para su visualización.")
 
+# Lee el archivo shapefile
+gdf1 = gpd.read_file("Suelo_territorio_accion2006_R14.shp")
 
-@st.cache_data() 
-def get_data():
-# Cargar el archivo SHP en un objeto GeoDataFrame
-    shp_path = "USO_suelo_Valdivia2006.shp"
-    gdf = gpd.read_file(shp_path)
-    # Cargar el segundo archivo SHP en otro objeto GeoDataFrame
-    shp2_path = "USO_suelo_LosLagos2006.shp"
-    gdf2 = gpd.read_file(shp2_path)
-    # Cargar el tercer archivo SHP en otro objeto GeoDataFrame
-    shp3_path = "USO_suelo_Mafil_2006.shp"
-    gdf3 = gpd.read_file(shp3_path)
-    # Cargar el cuarto archivo SHP en otro objeto GeoDataFrame
-    shp4_path = "USO_suelo_Panguipulli2006.shp"
-    gdf4 = gpd.read_file(shp4_path)
-    return gdf, gdf2, gdf3, gdf4
+# Crea el mapa utilizando la librería matplotlib
+fig, ax = plt.subplots(figsize=(10, 10))
 
+# Obtén los atributos únicos de la columna que deseas asignar colores diferentes
+unique_attributes_1 = gdf1['USO_ACTUAL'].unique()
 
+# Define una paleta de colores con la misma longitud que los atributos únicos
+colors_1 = plt.cm.Set1(np.linspace(0, 1, len(unique_attributes_1)))
 
-# Crear un objeto Folium Map centrado en los datos de los polígonos
-m = folium.Map(location=[-39.8, -72.8], zoom_start=9)
+# Asigna colores a los atributos correspondientes en cada capa
+for i, attribute in enumerate(unique_attributes_1):
+    gdf1[gdf1['USO_ACTUAL'] == attribute].plot(ax=ax, color=colors_1[i])
 
+ax.set_title('Uso de suelo en territorio de acción 2006.')
 
-# Agregar los datos de los polígonos al mapa
-# Obtener los datos de los polígonos y agregarlos al mapa
-gdf, gdf2, gdf3, gdf4 = get_data()
+# Crea la leyenda utilizando los atributos y los colores correspondientes
+handles = [plt.Rectangle((0, 0), 1, 1, color=colors_1[i]) for i, _ in enumerate(unique_attributes_1)]
+labels = unique_attributes_1
 
-folium.GeoJson(gdf,
-               name='Uso de suelo en Valdivia al año 2006',
-               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna', 'Uso de suelo al 2006']),
-               show=False# no se moestrara la capa al cargar la página, de lo contrario si es que se desea que se pueda visualizar desde un inicio debe ser con el comando "overlay=True"
-               ).add_to(m)
+# Ajusta la leyenda en varias columnas y la posiciona debajo del mapa
+legend = ax.legend(handles, labels, loc='upper center', ncol=3, bbox_to_anchor=(0.5, -0.2), fontsize='small', title='Leyenda')
 
-# Agregar los datos de los polígonos del segundo archivo SHP al mapa
-folium.GeoJson(gdf2,
-               name='Uso de suelo en Los Lagos al año 2006',
-               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna', 'Uso de suelo al 2006']),
-               show=False# no se moestrara la capa al cargar la página, de lo contrario si es que se desea que se pueda visualizar desde un inicio debe ser con el comando "overlay=True"
-               ).add_to(m)
+# Ajusta los márgenes del gráfico para separar la leyenda del mapa
+plt.subplots_adjust(bottom=0)
 
-#Agrega los datos de la tercera capa SHP al mapa
-folium.GeoJson(gdf3,
-               name='Uso de suelo en Máfil al año 2006',
-               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna','Uso de suelo al 2006']),
-               show=False# no se moestrara la capa al cargar la página, de lo contrario si es que se desea que se pueda visualizar desde un inicio debe ser con el comando "overlay=True"
-               ).add_to(m)
-
-#Agrega los datos de la cuarta capa SHP al mapa
-folium.GeoJson(gdf4,
-               name='Uso de suelo en Panguipulli al año 2006',
-               tooltip=folium.GeoJsonTooltip(fields=['COMUNA','USO_ACTUAL'], aliases=['Comuna','Uso de suelo al 2006']),
-               show=False# no se moestrara la capa al cargar la página, de lo contrario si es que se desea que se pueda visualizar desde un inicio debe ser con el comando "overlay=True"
-               ).add_to(m)
-#HASTA ESTE PUNTO SE PUEDEN VISUALIZAR BIEN LAS CAPAS, PERO HACE FALTA AGREGAR EL SELECCTOR DE CAPAS A LA VISUALIZACIÓN EN MAPA.
-
-
-
-# Crear el control de capas agrupadas
-
-control = folium.LayerControl()
-
-control.add_to(m)
-
-
-# Mostrar el mapa en Streamlit
-folium_static(m)
-
-
-
+# Visualiza el mapa en Streamlit
+st.pyplot(fig)
